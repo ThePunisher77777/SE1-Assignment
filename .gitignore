@@ -1,2 +1,8 @@
 .venv
 .DS_store
+transformers/
+cloc_output.csv
+task2_loc_cc.csv
+task2_hotspots.csv
+task2_correlation.csv
+complexity_hotspots.png
