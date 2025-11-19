@@ -22,7 +22,7 @@ The goal of this task was to:
 
 ### 1.1 Repository and File Selection
 - In this part only .py files from the Transformers repository where analyzed.
-- The template directories in the Transformers repository such as 'templates/adding_a_new_example_script/{{cookiecutter.directory_name}}' were excluded from the analysis because they contain invalid Python placeholders.
+- The template directories in the Transformers repository such as 'templates/adding_a_new_example_script/{{cookiecutter.directory_name}}' were excluded from the cyclomatic complexity analysis because they contain invalid Python placeholders.
 
 ### 1.2 Lines of Code (LoC)
 For computing the complexity metric LoC we used the Python library cloc, also shown in the examples from the lecture's book, which outputs blank, empty, and code lines. The code lines themselves only count executable code lines and do not count blank lines or comments.
@@ -66,7 +66,7 @@ As displayed above the scatter plot, some of the most complex .py files include:
 - src/transformers/models/seamless_m4t/modeling_seamless_m4t.py
 These .py files have both a high number of LoC and a high CC.
 
-## 3. Correlation Between LoC and Cyclomatic Complexity
+## 3. Correlation Between LoC and Cyclomatic Complexity
 To proof the statement "Files with more lines of code tend to have higher cyclomatic complexity" we computed the Pearson correlation between LoC and CC. The Pearson correlation resulted to 0.9234, which indicates a very strong correlation. Therefore, this statement is supported by the Person correlation and the scatter plot additionally confirms this visually, since the cyclomatic complexity tends to grow approximately linearly with the number of lines of code.
 
 ## 4. Relation Between Complexity and Defect-Proneness
@@ -85,23 +85,23 @@ df_merged["defects"] = df_merged["defects"].fillna(0)
 
 ## 5. Design Decisions & Limitations
 
-## 5.1 Complexity Metrics CC and LoC
+### 5.1 Complexity Metrics CC and LoC
 We chose the complexity metrics CC and LoC for this task, because they capture two complementary dimensions of software complexity.
 
-- 1. Lines of Code: Measuring the size
+1. Lines of Code: Measuring the size
 One the one side LoC measures the size of a file in terms of lines of executable code. The larger the files gets, usually the more complex it gets to maintain the file. Additionally, when a developer has more code to analyze and understand, a higher cognitive load is needed for the developer to understand all the code and LoC also turned out to be one of the strongest individual predictors of quality issues in the code. Therefore, since LoC is a simple metric, which is easy to understand, it provides a first baseline to measure the size of the files.
 
-- 2. Cyclomatic Complexity: Measuring the logical complexity
+2. Cyclomatic Complexity: Measuring the logical complexity
 On the other side CC measures the number of independent linear paths in the code and captures aspects, which LoC cannot check:
 - Branching
 - Number of decision points
 - While and until loops
 CC therefore is logic related and provides a basis to understand how hard a file is to reason about, test, develop, and maintain.
 
-## 5.2 Scatter Plot
+### 5.2 Scatter Plot
 We decided to use a scatter plot because it can display two dimensions at the same time. Furthermore, hotspots appear naturally in the upper-right corner and they are easy to detect and understand for users, which are not technical experts.
 
-## 5.3 Limitations
+### 5.3 Limitations
 For computing the LoC we used the Python library cloc, which excludes comments and blank lines and there might be different definitions of LoC. The hotspot selection using the 90th percentile was arbitrarly chosen, but is also commonly used in practice.
 
 ## 6. Files Produced
