@@ -23,3 +23,4 @@ six==1.17.0
 tzdata==2025.2
 urllib3==2.5.0
 pydriller==2.9
+networkx==3.5
