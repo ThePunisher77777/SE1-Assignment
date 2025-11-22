@@ -1,5 +1,20 @@
 # Fundamentals of Software Systems - Software Evolution - Part 1 Assignment
 
+# Task 1: Defect Analysis
+## Question: Calculate and plot the total number of defects per month. Why do you think the number of defects dropped sharply in October 2025?
+Commit 2ccc6ca contains many commit messages in one. Multiple of these have the word fix in them. But since we only count if the keyword is in the commit and not how often it is in the commit, we will get a 1 for the month October in 2025. https://github.com/huggingface/transformers/commit/2ccc6cae21faaf11631efa5fb9054687ae5dc931
+
+## Question 2: Calculate and plot the number of defects per month for the two files with the highest number of defects. In which month were the most defects introduced? How would you explain it? Manually examine the repository for that month (e.g., change logs, releases, commit messages) and come up with a hypothesis.
+March 2025. We can see that there was a large change 'Gemma3' with many commits. This seems like a large introduction of a new model/module which can cause many issues.
+
+## Question 3: What are the limitations of this method for finding defective hotspots?
+### 1. Keyword restriction
+We restrict ourselves to certain keywords. We don't know how commit messages are handled, it could be that sometimes none of the keywords provided in this code is ever used for a fix. (we make assumptions about the commit message handling)
+
+### 2. Defective files having side effects on other files
+Further we consider whole commits and then look at the files within one commit containing one of the keywords. This can lead to noisy data in the sense that we consider files to be "defective" since they were changed in one of those commits containing a certain keyword even if they did not have a defect. A scenario for this could be when a file references a defective file or need to acces some of its methods and maybe the signature of the method (params or return values) changed with the fix. 
+
+
 # Task 2: Complexity Analysis of the Transformers Repository
 
 ## Overview
