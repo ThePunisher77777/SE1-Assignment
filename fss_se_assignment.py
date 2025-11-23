@@ -9,6 +9,14 @@ import datetime
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import re
+import os
+from datetime import datetime
+from itertools import combinations
+from collections import Counter
+from pydriller import Repository
+import ast
+import sys
+from typing import Dict, Set
 
 # regex pattern
 pattern = re.compile(r"\b(bug|fix|error|issue)\b", re.IGNORECASE)
@@ -271,6 +279,395 @@ def run_task2_complexity_pipeline():
     defect_results = analyse_defects(all_results)
 
     return all_results, hotspots, defect_results
+
+def task3_1():
+    REPO_PATH = os.path.dirname(os.path.abspath(__file__))
+    SINCE_DATE = datetime(2023, 1, 1)
+    MIN_COMMITS_PAIR = 2  # threshold to filter noise
+
+    def extract_commit_data():
+        file_count = Counter()
+        pair_count = Counter()
+
+        for i, commit in enumerate(Repository(REPO_PATH, since=SINCE_DATE).traverse_commits(), start=1):
+            if i % 50 == 0:
+                print(f"Processed {i} commits...")
+
+            changed = set()
+            for m in commit.modified_files:
+                path = m.new_path or m.old_path
+                if path and path.endswith('.py'):
+                    changed.add(path)
+
+            if not changed:
+                continue
+
+            for f in changed:
+                file_count[f] += 1
+
+            if len(changed) > 1:
+                for f1, f2 in combinations(sorted(changed), 2):
+                    pair_count[(f1, f2)] += 1
+
+        print("Finished extracting commits.")
+        print(f"Unique files touched: {len(file_count)}")
+        print(f"File pairs detected: {len(pair_count)}")
+
+        return file_count, pair_count
+
+    def compute_logical_coupling(file_count, pair_count):
+        results = []
+        for (f1, f2), cij in pair_count.items():
+            if cij < MIN_COMMITS_PAIR:
+                continue
+            ci, cj = file_count[f1], file_count[f2]
+            lc = cij / min(ci, cj)  # normalization
+            results.append((f1, f2, cij, ci, cj, lc))
+
+        results.sort(key=lambda x: x[-1], reverse=True)
+        return results
+
+    def main():
+        file_count, pair_count = extract_commit_data()
+        lc_results = compute_logical_coupling(file_count, pair_count)
+
+        df = pd.DataFrame(lc_results, columns=[
+            "file1", "file2",
+            "commits_together",
+            "commits_file1",
+            "commits_file2",
+            "logical_coupling"
+        ])
+
+        # Write CSV
+        out_path = "task3_code_pairs.csv"
+        df.to_csv(out_path, index=False)
+
+        print(f"\nSaved CSV to: {out_path}")
+        print("Top 20 rows:")
+        print(df.head(20))
+
+    main()
+
+
+def task3_2():
+    REPO_PATH = os.path.dirname(os.path.abspath(__file__))
+    SINCE_DATE = datetime(2023, 1, 1)
+    MIN_COMMITS_PAIR = 2  # threshold to filter noise
+
+    def is_test_file(path: str) -> bool:
+        base = os.path.basename(path)
+
+        if base.startswith("test_"):
+            return True
+        return False
+
+    def extract_commit_data():
+        file_count = Counter()
+        pair_count = Counter()
+
+        for i, commit in enumerate(Repository(REPO_PATH, since=SINCE_DATE).traverse_commits(), start=1):
+            if i % 50 == 0:
+                print(f"Processed {i} commits...")
+
+            changed = set()
+            for m in commit.modified_files:
+                path = m.new_path or m.old_path
+                if path and path.endswith(".py"):
+                    changed.add(path)
+
+            if not changed:
+                continue
+
+            for f in changed:
+                file_count[f] += 1
+
+            # update pair counts
+            if len(changed) > 1:
+                for f1, f2 in combinations(sorted(changed), 2):
+                    pair_count[(f1, f2)] += 1
+
+        print("Finished extracting commits.")
+        print(f"Unique files touched: {len(file_count)}")
+        print(f"File pairs detected (all): {len(pair_count)}")
+
+        return file_count, pair_count
+
+    def compute_test_code_coupling(file_count, pair_count):
+        results = []
+
+        for (f1, f2), cij in pair_count.items():
+            if cij < MIN_COMMITS_PAIR:
+                continue
+
+            is_test1 = is_test_file(f1)
+            is_test2 = is_test_file(f2)
+
+            # skip pairs that are test–test or non-test–non-test
+            if is_test1 == is_test2:
+                continue
+
+            ci, cj = file_count[f1], file_count[f2]
+            lc = cij / min(ci, cj)  # same normalization as before
+
+            results.append((f1, f2, cij, ci, cj, lc))
+
+        results.sort(key=lambda x: x[-1], reverse=True)
+        return results
+
+    def main():
+        file_count, pair_count = extract_commit_data()
+        print("Computing logical coupling for TEST–CODE pairs only...")
+        lc_results = compute_test_code_coupling(file_count, pair_count)
+
+        df = pd.DataFrame(lc_results, columns=[
+            "file1", "file2",
+            "commits_together",
+            "commits_file1",
+            "commits_file2",
+            "logical_coupling"
+        ])
+
+        # Write CSV
+        out_path = "task3_test_code_pairs.csv"
+        df.to_csv(out_path, index=False)
+
+        print(f"\nSaved CSV to: {out_path}")
+        print("Top 20 rows:")
+        print(df.head(20))
+
+    main()
+
+
+def task3_4_1(file_path):
+    def find_repo_root(start: Path) -> Path:
+        current = start.resolve()
+        for parent in [current] + list(current.parents):
+            if (parent / ".git").is_dir():
+                return parent
+        raise RuntimeError(f"Could not find .git directory above {start}")
+
+    def to_repo_relative(path: Path, repo_root: Path) -> Path:
+        """Convert absolute path to repo-relative path."""
+        try:
+            return path.resolve().relative_to(repo_root)
+        except ValueError:
+            raise RuntimeError(f"{path} is not inside repo root {repo_root}")
+
+    def mirror_structure(rel_src: Path) -> Path:
+        """
+        Mirror the structure exactly:
+        src/transformers/generation/utils.py
+        ->
+        tests/transformers/generation/test_utils.py
+        """
+        parts = list(rel_src.parts)
+
+        # Must start with "src/"
+        if not parts or parts[0] != "src":
+            raise ValueError(f"Source file must be under src/, got: {rel_src}")
+
+        parts[0] = "tests"
+        filename = parts[-1]
+        stem = Path(filename).stem
+        new_filename = f"test_{stem}.py"
+
+        parts[-1] = new_filename
+
+        return Path(*parts)
+
+    def find_test_structural_mirror(src_file: Path) -> Path:
+        """Return the test file location by strict mirroring."""
+        repo_root = find_repo_root(src_file)
+        rel_src = to_repo_relative(src_file, repo_root)
+
+        if rel_src.suffix != ".py":
+            raise ValueError("Input must be a .py file")
+
+        return mirror_structure(rel_src)
+
+    def main():
+        test_path = find_test_structural_mirror(file_path)
+        print(test_path)
+
+    main()
+
+
+def task3_4_2(file_path):
+    def find_repo_root(start: Path) -> Path:
+        current = start.resolve()
+        for parent in [current] + list(current.parents):
+            if (parent / ".git").is_dir():
+                return parent
+        raise RuntimeError(f"Could not find .git directory above {start}")
+
+    def to_repo_relative(path: Path, repo_root: Path) -> Path:
+        try:
+            return path.resolve().relative_to(repo_root)
+        except ValueError:
+            raise RuntimeError(f"{path} is not inside repo root {repo_root}")
+
+    def compute_module_name(rel_src: Path) -> str:
+        """
+        Compute a Python module name from a repo-relative source path.
+        Example: src/transformers/data/processors/squad.py -> transformers.data.processors.squad
+        """
+        parts = list(rel_src.parts)
+
+        if not parts or parts[0] != "src":
+            raise ValueError(f"Source file must be under src/, got: {rel_src}")
+
+        # drop "src"
+        parts = parts[1:]
+
+        # remove .py
+        if parts[-1].endswith(".py"):
+            parts[-1] = parts[-1][:-3]
+
+        if not parts:
+            raise ValueError(f"Cannot compute module name from path: {rel_src}")
+
+        return ".".join(parts)
+
+    def build_import_index(repo_root: Path) -> Dict[str, Set[Path]]:
+        tests_root = repo_root / "tests"
+        mapping: Dict[str, Set[Path]] = defaultdict(set)
+
+        if not tests_root.is_dir():
+            print(f"[WARN] No tests/ directory found under {repo_root}", file=sys.stderr)
+            return mapping
+
+        for test_path in tests_root.rglob("test*.py"):
+            rel_test = test_path.relative_to(repo_root)
+            imports_for_this_test: Set[str] = set()
+
+            try:
+                text = test_path.read_text(encoding="utf-8")
+            except (UnicodeDecodeError, OSError) as e:
+                print(f"[WARN] Could not read {rel_test}: {e}", file=sys.stderr)
+                continue
+
+            try:
+                tree = ast.parse(text, filename=str(test_path))
+            except SyntaxError as e:
+                print(f"[WARN] Syntax error in {rel_test}: {e}", file=sys.stderr)
+                continue
+
+            # go through files and collect imports
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    # e.g. "import transformers.data.processors.squad as squad_mod"
+                    for alias in node.names:
+                        name = alias.name  # "transformers.data.processors.squad"
+                        mapping[name].add(rel_test)
+                        imports_for_this_test.add(name)
+
+                elif isinstance(node, ast.ImportFrom):
+                    # e.g. "from transformers.data.processors.squad import SquadExample"
+                    mod = node.module  # "transformers.data.processors.squad"
+                    if mod is None:
+                        continue
+
+                    mapping[mod].add(rel_test)
+                    imports_for_this_test.add(mod)
+
+                    # Also index full name including imported symbol
+                    for alias in node.names:
+                        full_name = f"{mod}.{alias.name}"  # "transformers.data.processors.squad.SquadExample"
+                        mapping[full_name].add(rel_test)
+                        imports_for_this_test.add(full_name)
+
+            if imports_for_this_test:
+                imports_sorted = sorted(imports_for_this_test)
+            else:
+                imports_sorted = []
+            # print(f"[IMPORTS] {rel_test}: {imports_sorted}")
+
+        return mapping
+
+    def find_test_by_imports(src_file: Path) -> Path:
+        """
+        Input: a non-test source file, find the most related test file
+        """
+        if not src_file.is_file():
+            raise FileNotFoundError(f"Source file does not exist: {src_file}")
+
+        repo_root = find_repo_root(src_file)
+        rel_src = to_repo_relative(src_file, repo_root)
+
+        module_name = compute_module_name(rel_src)
+        print(f"[INPUT] Source file: {rel_src}")
+        # print(f"[INFO] Module name: {module_name}")
+
+        import_index = build_import_index(repo_root)
+        direct_tests = import_index.get(module_name, set())
+
+        if not direct_tests:
+            # check entries where module_name is a prefix:
+            # e.g. module_name = transformers.data.processors.squad
+            # and index key = transformers.data.processors.squad.SquadExample
+            prefix = module_name + "."
+            candidates = {t for mod, tests in import_index.items() if mod.startswith(prefix) for t in tests}
+
+            if not candidates:
+                raise RuntimeError(f"No test file imports module '{module_name}' (or its symbols).")
+
+            direct_tests = candidates
+
+        best = sorted(
+            direct_tests,
+            key=lambda p: (len(p.parts), str(p))
+        )[0]
+
+        return best
+
+    def main():
+        src_path = Path(file_path)
+        try:
+            test_rel = find_test_by_imports(src_path)
+        except Exception as e:
+            print(f"[ERROR] {e}", file=sys.stderr)
+            sys.exit(1)
+
+        print(f"[RESULT] {test_rel}")
+
+    main()
+
+
+def plot_task3(csv_path: str, out_path: str = "top10_bar.png"):
+    def plot_top10(csv_path: str, out_path: str = "top10_bar.png"):
+        if not os.path.isfile(csv_path):
+            raise FileNotFoundError(f"CSV file not found: {csv_path}")
+
+        df = pd.read_csv(csv_path)
+
+        # Sort and select top 10
+        df_sorted = df.sort_values(
+            ["logical_coupling", "commits_together"],
+            ascending=[False, False]
+        )
+        top10 = df_sorted.head(10)
+
+        labels = []
+        for _, row in top10.iterrows():
+            left = os.path.basename(row["file1"])
+            right = os.path.basename(row["file2"])
+            labels.append(f"{left} & {right}")
+
+        # Plot
+        plt.figure(figsize=(12, 6))
+        plt.barh(labels, top10["logical_coupling"])
+        plt.gca().invert_yaxis()  # highest score at top
+        plt.xlabel("Logical Coupling (C(i,j) / min(C(i), C(j)))")
+        plt.title("Top 10 Most Logically Coupled File Pairs")
+        plt.tight_layout()
+        plt.savefig(out_path, dpi=200)
+        plt.close()
+
+        print(f"Saved bar chart to: {out_path}")
+
+    plot_top10(csv_path, out_path)
+
 
 if __name__ == "__main__":
     task1()
