@@ -26,7 +26,7 @@ For computing the complexity metric LoC we used the Python library cloc, also sh
 ## Question 3: Visualize the complexity hotspots. The visualization should effectively convey which parts of the code are more complex or change more frequently. Feel free to use any visualization of your choice and explain the rationale behind your decision.
 The complexity hotspots were defined as files, which are in the top 10% for CC or LoC. The thresholds, which we used for CC and LoC were the 90th percentile of CC (195.7) and the 90th percentile of LoC (864.7). We decided to use a scatter plot because it can display two dimensions at the same time. Furthermore, hotspots appear naturally in the upper-right corner and they are easy to detect and understand for users, which are not technical experts. The scatter plot below visualizes the complexity metrics LoC and CC for all the .py files of the Transformer repository. The complexity hotspots are displayed in red and are more prominent in the upper-right region.
 
-<img width="4200" height="2700" alt="complexity_hotspots" src="https://github.com/user-attachments/assets/7b887eaf-dc60-4233-9ca7-15cd869cbf4f" />
+![complexity_hotspots](complexity_hotspots.png)
 
 As displayed above the scatter plot, some of the most complex .py files include:
 - src/transformers/modeling_common.py
@@ -42,11 +42,11 @@ To proof the statement "Files with more lines of code tend to have higher cyclom
 ## Question 5: A colleague of yours claims that “Files with higher complexity tend to be more defective”. What evidence can you present to support or reject this claim for the selected complexity measures in this repository?
 To proof the claim that " Files with higher complexity tend to be more defective" we merged the complexity metrics (LoC and CC) from Task 2 with the defect counts from Task 1 (defects_per_file.csv) into the file task2_loc_cc_defects.csv. We then calculated the correlations between CC and the number of defect-related commits and between LoC and the number of defect-related commits. The statistical analysis shows moderate positive correlation between CC and defects (r = 0.555) and a similar correlation between LoC and defects (r = 0.567). This shows, that generally more complex files tend to have more defect-related commits. Using a scatter plot we visualized the relation between CC and the defect-related commits in the image defects_vs_cc as shown below.
 
-<img width="3600" height="2400" alt="defects_vs_cc" src="https://github.com/user-attachments/assets/4854cea5-217b-4cf4-980d-3da9a06a42e4" />
+![defects_vs_cc](defects_vs_cc.png)
 
 We compared the top 10% most complex CC group with the lower 90% CC groups to see if files with higher complexity exhibit more defects. The hotspot selection using the 90th percentile was arbitrarly chosen, but is also commonly used in practice. Files in the top complexity group have 31 defects on average, whereas the remaining 90% CC groups only about 8 defects on average. Therefore, this comparison also supports the claim. Even though both correlations are not extremely strong, they both point in the same direction. Additionally, we visualized this using a boxplot the top 10% CC and the bottom 90% as displayed in defect_boxplot_cc_groups.png or also below.
 
-<img width="3000" height="1800" alt="defect_boxplot_cc_groups" src="https://github.com/user-attachments/assets/e8a4c802-71ed-48e6-9776-45c8568c8b77" />
+![defect_boxplot_cc_groups](defect_boxplot_cc_groups.png)
 
 Therefore, these results provide enough evidence that files with higher complexity tend to be more defective.
 
