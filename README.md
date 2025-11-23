@@ -16,127 +16,39 @@ We restrict ourselves to certain keywords. We don't know how commit messages are
 ### 2. Defective files having side effects on other files
 Further we consider whole commits and then look at the files within one commit containing one of the keywords. This can lead to noisy data in the sense that we consider files to be "defective" since they were changed in one of those commits containing a certain keyword even if they did not have a defect. A scenario for this could be when a file references a defective file or need to acces some of its methods and maybe the signature of the method (params or return values) changed with the fix. 
 
-# Task 2: Complexity Analysis of the Transformers Repository
+# Task 2: Complexity Analysis
+## Question 1: Select two complexity metrics of your choice.
+We selected for task 2 the complexity metrics Cyclomatic Complexity (CC) and Lines of Code (LoC), because they capture two complementary dimensions of software complexity. One the one side LoC measures the size of a file in terms of lines of executable code. The larger the files gets, usually the more complex it gets to maintain the file. Additionally, when a developer has more code to analyze and understand, a higher cognitive load is needed for the developer to understand all the code and LoC also turned out to be one of the strongest individual predictors of quality issues in the code. Therefore, since LoC is a simple metric, which is easy to understand, it provides a first baseline to measure the size of the files. On the other side CC measures the number of independent linear paths in the code and captures aspects, which LoC cannot check such as, branching, number of decision points and while and until loops. CC therefore is logic related and provides a basis to understand how hard a file is to reason about, test, develop, and maintain.
 
-## Overview
-This part analyzes the complexity of the Hugging Face Transformers repository using the two complexity metrics:
+## Question 2: Calculate the complexity of all .py files in the repository using the selected metrics.
+For computing the complexity metric LoC we used the Python library cloc, also shown in the examples from the lecture's book, which outputs blank, empty, and code lines. The Python library cloc excludes comments and blank lines and there might be different definitions of LoC. The code lines themselves only count executable code lines and do not count blank lines or comments. We used the Python library radon to compute the CC and for each file we summed up the complexity of all functions/classes into a single total CC per file. The two complexity metrics of all .py files were calculated except the template directories in the Transformers repository such as 'templates/adding_a_new_example_script/{{cookiecutter.directory_name}}' were excluded from the cyclomatic complexity analysis because they contain invalid Python placeholders. The calculated complexity metrics CC and LoC can be found in the files cloc_output.csv (for LoC) and task2_loc_cc.csv (for both LoC and CC), which are automatically generated when executing the code.
 
-- **Cyclomatic Complexity (CC)** - which measures the number of linearly independent paths through the Python files by measuring the control flow within the program.
-- **Lines of Code (LoC)** - which measures the number of lines of executable code excluding blank lines and comments.
+## Question 3: Visualize the complexity hotspots. The visualization should effectively convey which parts of the code are more complex or change more frequently. Feel free to use any visualization of your choice and explain the rationale behind your decision.
+The complexity hotspots were defined as files, which are in the top 10% for CC or LoC. The thresholds, which we used for CC and LoC were the 90th percentile of CC (195.7) and the 90th percentile of LoC (864.7). We decided to use a scatter plot because it can display two dimensions at the same time. Furthermore, hotspots appear naturally in the upper-right corner and they are easy to detect and understand for users, which are not technical experts. The scatter plot below visualizes the complexity metrics LoC and CC for all the .py files of the Transformer repository. The complexity hotspots are displayed in red and are more prominent in the upper-right region.
 
-The goal of this task was to:
+<img width="4200" height="2700" alt="complexity_hotspots" src="https://github.com/user-attachments/assets/7b887eaf-dc60-4233-9ca7-15cd869cbf4f" />
 
-1. Calculate the LoC and CC of all .py files.
-2. Identify complexity hotspots.
-3. Visualize the complexity distribution across the entire project.
-4. Analyze if the selected CC and LoC correlate.
-5. Relate complexity with possibility for defects using data from task 1.
-
----
-
-## 1. Methodology
-
-### 1.1 Repository and File Selection
-- In this part only .py files from the Transformers repository where analyzed.
-- The template directories in the Transformers repository such as 'templates/adding_a_new_example_script/{{cookiecutter.directory_name}}' were excluded from the cyclomatic complexity analysis because they contain invalid Python placeholders.
-
-### 1.2 Lines of Code (LoC)
-For computing the complexity metric LoC we used the Python library cloc, also shown in the examples from the lecture's book, which outputs blank, empty, and code lines. The code lines themselves only count executable code lines and do not count blank lines or comments.
-
-### 1.3 Cyclomatic Complexity (CC)
-We used the Python library radon to compute the CC as follows:
-
-from radon.complexity import cc_visit
-blocks = cc_visit(code)
-total_cc = sum(b.complexity for b in blocks)
-
-Therefore, for each file we summed up the complexity of all functions/classes into a single total CC per file.
-
-### 1.4 Hotspot Definition
-The complexity hotspots were defined as files, which are in the top 10% for CC or LoC. The thresholds, which we used for CC and LoC were the following:
-- 90th percentile CC: 195.7
-- 90th percentile LoC: 864.7
-
-### 1.5 Tools Used
-The tools used for the completing the task 2 were:
-- Python 3.12 (isolated virtual environment)
-- cloc
-- radon
-- pandas
-- mathplotlib
-- pathlib / subprocess for automation
-All packages needed are exported to requirements.txt.
-
-## 2. Results
-
-### 2.1 Hotspot Visualization
-The scatter plot below visualizes the complexity metrics LoC and CC for all the .py files of the Transformer repository.
-The complexity hotspots are displayed in red and are more prominent in the upper-right region.
-
-### 2.2 Example Hotspot Files
 As displayed above the scatter plot, some of the most complex .py files include:
 - src/transformers/modeling_common.py
 - src/transformers/modeling_utils.py
 - src/transformers/trainer.py
 - src/transformers/models/seamless_m4t_v2/modeling_seamless_m4t_v2.py
 - src/transformers/models/seamless_m4t/modeling_seamless_m4t.py
-These .py files have both a high number of LoC and a high CC.
+These .py files have both a high number of LoC and a high CC. The exact hotspot files detected by our analysis can be found in the file task2_hotspots.csv.
 
-## 3. Correlation Between LoC and Cyclomatic Complexity
-To proof the statement "Files with more lines of code tend to have higher cyclomatic complexity" we computed the Pearson correlation between LoC and CC. The Pearson correlation resulted to 0.9234, which indicates a very strong correlation. Therefore, this statement is supported by the Person correlation and the scatter plot additionally confirms this visually, since the cyclomatic complexity tends to grow approximately linearly with the number of lines of code.
+## Question 4: What can you say about the correlation between the two complexity measures in this repository? For example, if you selected CC and LoC, what can you say for the statement “Files with more lines of code tend to have higher cyclomatic complexity”?
+To proof the statement "Files with more lines of code tend to have higher cyclomatic complexity" we computed the Pearson correlation between LoC and CC. The Pearson correlation resulted to 0.9234, which indicates a very strong positive relationship. Therefore, this statement is supported by the Pearson correlation and the scatter plot above additionally confirms this visually, since the cyclomatic complexity tends to grow approximately linearly with the number of lines of code. The file task2_correlation.csv contains the actual Pearson correlation value.
 
-## 4. Relation Between Complexity and Defect-Proneness
-To proof the claim that " Files with higher complexity tend to be more defective" we analyzed the Transformer repository as follows.
+## Question 5: A colleague of yours claims that “Files with higher complexity tend to be more defective”. What evidence can you present to support or reject this claim for the selected complexity measures in this repository?
+To proof the claim that " Files with higher complexity tend to be more defective" we merged the complexity metrics (LoC and CC) from Task 2 with the defect counts from Task 1 (defects_per_file.csv) into the file task2_loc_cc_defects.csv. We then calculated the correlations between CC and the number of defect-related commits and between LoC and the number of defect-related commits. The statistical analysis shows moderate positive correlation between CC and defects (r = 0.555) and a similar correlation between LoC and defects (r = 0.567). This shows, that generally more complex files tend to have more defect-related commits. Using a scatter plot we visualized the relation between CC and the defect-related commits in the image defects_vs_cc as shown below.
 
-1. We merged the complexity data with the defect data.
+<img width="3600" height="2400" alt="defects_vs_cc" src="https://github.com/user-attachments/assets/4854cea5-217b-4cf4-980d-3da9a06a42e4" />
 
-df_merged = df.merge(defects, on="file", how="left")
-df_merged["defects"] = df_merged["defects"].fillna(0)
+We compared the top 10% most complex CC group with the lower 90% CC groups to see if files with higher complexity exhibit more defects. The hotspot selection using the 90th percentile was arbitrarly chosen, but is also commonly used in practice. Files in the top complexity group have 31 defects on average, whereas the remaining 90% CC groups only about 8 defects on average. Therefore, this comparison also supports the claim. Even though both correlations are not extremely strong, they both point in the same direction. Additionally, we visualized this using a boxplot the top 10% CC and the bottom 90% as displayed in defect_boxplot_cc_groups.png or also below.
 
-2. We calculated the correlations between CC and the defects and between LoC and the defects.
+<img width="3000" height="1800" alt="defect_boxplot_cc_groups" src="https://github.com/user-attachments/assets/e8a4c802-71ed-48e6-9776-45c8568c8b77" />
 
-3. We compared the top 10% CC group with the lower CC groups to see if files with higher complexity exhibit more defects.
-
-4. Using a scatter plot we visualize the relation between CC and the defects. Additionally, we visualize using a boxplot the top 10% CC and the bottom 90%.
-
-## 5. Design Decisions & Limitations
-
-### 5.1 Complexity Metrics CC and LoC
-We chose the complexity metrics CC and LoC for this task, because they capture two complementary dimensions of software complexity.
-
-1. Lines of Code: Measuring the size
-One the one side LoC measures the size of a file in terms of lines of executable code. The larger the files gets, usually the more complex it gets to maintain the file. Additionally, when a developer has more code to analyze and understand, a higher cognitive load is needed for the developer to understand all the code and LoC also turned out to be one of the strongest individual predictors of quality issues in the code. Therefore, since LoC is a simple metric, which is easy to understand, it provides a first baseline to measure the size of the files.
-
-2. Cyclomatic Complexity: Measuring the logical complexity
-On the other side CC measures the number of independent linear paths in the code and captures aspects, which LoC cannot check:
-- Branching
-- Number of decision points
-- While and until loops
-CC therefore is logic related and provides a basis to understand how hard a file is to reason about, test, develop, and maintain.
-
-### 5.2 Scatter Plot
-We decided to use a scatter plot because it can display two dimensions at the same time. Furthermore, hotspots appear naturally in the upper-right corner and they are easy to detect and understand for users, which are not technical experts.
-
-### 5.3 Limitations
-For computing the LoC we used the Python library cloc, which excludes comments and blank lines and there might be different definitions of LoC. The hotspot selection using the 90th percentile was arbitrarly chosen, but is also commonly used in practice.
-
-## 6. Files Produced
-When executing the entire analysis file fss_se_assignment.py the following files will be automatically created:
-- cloc_output.csv 
-The raw cloc output after cloc has computed the LoC of all files, will be stored in the file cloc_output.csv.
-- task2_loc_cc.csv
-The combined LoC and CC metrics of all files are stored in task2_loc_cc.csv.
-- task2_hotspots.csv
-All the hotspot files of the repository are stored in task2_hotspots.csv.
-- complexity_hotspots.png
-The created scatter plot is stored in the file complexity_hotspots.png.
-- task2_correlations.csv
-The correlation value between LoC and CC is stored in task2_correlations.csv.
-
-## 7. Conclusion
-The Transformer repository contains several large and complex Python files, which can be found especially under src/transformers/models and testing utilities. CC and LoC show a very strong correlation (0.92), which indicates that files with more lines of code tend to have higher cyclomatic complexity.
-
-
+Therefore, these results provide enough evidence that files with higher complexity tend to be more defective.
 
 # Task 3: Coupling Analysis
 ## 10 Most Coupled File Pairs
