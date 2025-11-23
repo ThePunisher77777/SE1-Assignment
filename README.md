@@ -134,3 +134,49 @@ The correlation value between LoC and CC is stored in task2_correlations.csv.
 
 ## 7. Conclusion
 The Transformer repository contains several large and complex Python files, which can be found especially under src/transformers/models and testing utilities. CC and LoC show a very strong correlation (0.92), which indicates that files with more lines of code tend to have higher cyclomatic complexity.
+
+
+
+# Task 3: Coupling Analysis
+## 10 Most Coupled File Pairs
+![Plot Task 3.1](Task3_1Plot.png)
+
+The files setup.py and dependency_versions_table.py have a high logical coupling, because setup.py defines the requirements for packages and dependency_versions_table.py contains the supported versions of the packages. Whenever a dependency is updated, the versions are changed in both files.
+
+## 10 Most Coupled File Pairs (with test files)
+![Plot Task 3.2](Task3_2Plot.png)
+
+The files backbone_utils.py and test_backbone_utils.py are highly coupled. When a test file and a non-test file change together in the same commits very often (high logical coupling), it means that the test is tightly focused on that specific piece of production code. Whenever developers modify the code, they also have to adjust the test for it to pass, which means the test is sensitive to changes of the specific code.
+Therefore, the high coupling does not indicate that the code should be refactored. It rather shows how closely the tests track changes in the code.
+
+## Methods For Selecting the Most "Related" Test File
+1.	**Version-control based logical coupling**: 
+We can use the Git history to find the test file that most often changes together with the target input .py file. It finds the test file which is the most associated with a given source file based on the commits.
+However, finding these files e.g. computing coupling can take several minutes, depending on how many commits are being searched for and how big the repository is.
+
+2.	**Matching structural and naming conventions**:
+Usually, the test files and folder structure in the /test folder mirrors the one in the /src folder. With that, the associated file can easily be located by getting the path of the target input .py file. This solution is fast and doesn’t require Git history.
+However, it may not find additional integration tests that are stored elsewhere, or test files that cover multiple modules. It only works in a repository with exact same /src and /test structure.
+
+4.	**Coverage-based mapping**:
+We could use test coverage to see which test files execute the lines in the target .py file. The test file with tests that hit and cover the most parts of the target .py file is the most related.
+However, if coverage is too low, this metric may not be useful. Also, the quality of the tests play a role. Furthermore, the entire test suite has to be run, which could take long. This doesn’t require the test files to have a correct naming convention.
+
+6.	**Test file import analysis**:
+Analyse the imports of all test files and take the test files that import the target .py file. This doesn’t require Git history or tests to run and also doesn’t need correct naming conventions and file/folder structures.
+
+
+## Implementation of Structural Naming Method and Import-Analysis Method
+**Structural Naming Method**
+
+First, it maps the generation subfolder under src/transformers to tests/generation, and then it creates the test file with the naming convention of adding “test_” to the target .py file, e.g. for utils.py it creates test_utils.py.
+However, this is wrong, as the structure in /test is not identical to the one in /src. The corresponding test file is at tests\generation\test_utils.py.
+
+-> task3_4_1() in fss_se_assignment.py
+
+**Import-Analysis Method**
+
+It analysis the import statements of all the files in the fest folders. It outputs the filepath of the test file that imported the input .py file.
+For src/transformers/generation/utils.py, it outputs the path tests\generation\test_utils.py which is correct (the file already exists there and imports the utils.py target file.
+
+-> task3_4_2() in fss_se_assignment.py
