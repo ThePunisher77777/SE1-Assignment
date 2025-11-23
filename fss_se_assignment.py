@@ -18,6 +18,11 @@ import ast
 import sys
 from typing import Dict, Set
 
+"""
+RUN THIS FILE OUTSIDE transformers REPOSITORY (on the same height).
+"""
+
+
 # regex pattern
 pattern = re.compile(r"\b(bug|fix|error|issue)\b", re.IGNORECASE)
 
@@ -440,54 +445,34 @@ def task3_2():
 
 
 def task3_4_1(file_path):
-    def find_repo_root(start: Path) -> Path:
-        current = start.resolve()
-        for parent in [current] + list(current.parents):
-            if (parent / ".git").is_dir():
-                return parent
-        raise RuntimeError(f"Could not find .git directory above {start}")
-
-    def to_repo_relative(path: Path, repo_root: Path) -> Path:
-        """Convert absolute path to repo-relative path."""
-        try:
-            return path.resolve().relative_to(repo_root)
-        except ValueError:
-            raise RuntimeError(f"{path} is not inside repo root {repo_root}")
-
     def mirror_structure(rel_src: Path) -> Path:
         """
         Mirror the structure exactly:
-        src/transformers/generation/utils.py
-        ->
-        tests/transformers/generation/test_utils.py
+        src/.../name.py  ->  tests/.../test_name.py
         """
         parts = list(rel_src.parts)
 
-        # Must start with "src/"
         if not parts or parts[0] != "src":
-            raise ValueError(f"Source file must be under src/, got: {rel_src}")
+            raise ValueError(f"Expected path starting with 'src/', got: {rel_src}")
 
         parts[0] = "tests"
         filename = parts[-1]
         stem = Path(filename).stem
         new_filename = f"test_{stem}.py"
-
         parts[-1] = new_filename
 
         return Path(*parts)
 
+    def to_repo_relative(path: Path) -> Path:
+        return Path(path)
+
     def find_test_structural_mirror(src_file: Path) -> Path:
-        """Return the test file location by strict mirroring."""
-        repo_root = find_repo_root(src_file)
-        rel_src = to_repo_relative(src_file, repo_root)
-
-        if rel_src.suffix != ".py":
-            raise ValueError("Input must be a .py file")
-
+        """Return the strict mirrored test path."""
+        rel_src = to_repo_relative(src_file)
         return mirror_structure(rel_src)
 
     def main():
-        test_path = find_test_structural_mirror(file_path)
+        test_path = find_test_structural_mirror(Path(file_path))
         print(test_path)
 
     main()
@@ -672,3 +657,7 @@ def plot_task3(csv_path: str, out_path: str = "top10_bar.png"):
 if __name__ == "__main__":
     task1()
     all_results, hotspots, defect_results = run_task2_complexity_pipeline()
+    task3_1()
+    task3_2()
+    task3_4_1("src/transformers/generation/utils.py")
+    task3_4_2("transformers/src/transformers/generation/utils.py")
