@@ -142,6 +142,14 @@ The Transformer repository contains several large and complex Python files, whic
 ## 10 Most Coupled File Pairs
 ![Plot Task 3.1](Task3_1Plot.png)
 
+The following formula was used to calculate logical coupling LC:
+
+LC = C(F, T) / ( min( C(F), C(T)) )
+
+- C(F, T) = commits touching the file and the test file
+- C(F) = commits touching the file
+- C(T) = commits touching the test file
+
 The files setup.py and dependency_versions_table.py have a high logical coupling, because setup.py defines the requirements for packages and dependency_versions_table.py contains the supported versions of the packages. Whenever a dependency is updated, the versions are changed in both files.
 
 ## 10 Most Coupled File Pairs (with test files)
