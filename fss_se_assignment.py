@@ -10,8 +10,6 @@ from collections import defaultdict
 import matplotlib.pyplot as plt
 import re
 
-RUN_DEFECT_ANALYSIS = False
-
 # regex pattern
 pattern = re.compile(r"\b(bug|fix|error|issue)\b", re.IGNORECASE)
 
@@ -87,7 +85,7 @@ def plot_task_1(defects_per_month, defects_per_month_two_most_occuring):
     axes[1].set_title("Defects per Month of 2 most occuring files")
 
     plt.tight_layout()
-    plt.show()
+    plt.savefig("Task1Plot.png", dpi=300)
 
 def run_cloc(repo_root="transformers", out_file="cloc_output.csv"):
     repo_root = Path(repo_root).resolve()
@@ -268,12 +266,8 @@ def run_task2_complexity_pipeline():
     print("\nSTEP 7: Correlation between LoC and CC")
     compute_correlation(all_results)
 
-    if RUN_DEFECT_ANALYSIS:
-        print("\nSTEP 8: Analysing defects")
-        defect_results = analyse_defects(all_results)
-    else:
-        print("\nSTEP 8: Skipping defect analysis (Task 1 not ready yet)")
-        defect_results = None
+    print("\nSTEP 8: Analysing defects")
+    defect_results = analyse_defects(all_results)
 
     return all_results, hotspots, defect_results
 
