@@ -256,33 +256,29 @@ def analyse_defects(all_results, defects_path="defects_per_file.csv"):
         "all_results_merged": all_results_merged,
     }
 
-def run_task2_complexity_pipeline():
-    print("\nSTEP 1: Running cloc")
+def task2_2():
     run_cloc("transformers", "cloc_output.csv")
-
-    print("\nSTEP 2: Reading LoC results")
     loc_results = load_cloc_results("cloc_output.csv")
-
-    print("\nSTEP 3: Computing Cyclomatic Complexity")
     cc_results = compute_cc_for_all_files("transformers")
 
-    print("\nSTEP 4: Merging metrics")
     all_results = loc_results.merge(cc_results, on="file", how="inner")
     all_results.to_csv("task2_loc_cc.csv", index=False)
 
-    print("\nSTEP 5: Identifying hotspots")
+    return all_results
+
+
+def task2_3(all_results):
     hotspots = identify_hotspots(all_results)
-
-    print("\nSTEP 6: Plotting hotspots")
     plot_hotspots(all_results, hotspots)
+    return hotspots
 
-    print("\nSTEP 7: Correlation between LoC and CC")
-    compute_correlation(all_results)
 
-    print("\nSTEP 8: Analysing defects")
-    defect_results = analyse_defects(all_results)
+def task2_4(all_results):
+    return compute_correlation(all_results)
 
-    return all_results, hotspots, defect_results
+
+def task2_5(all_results):
+    return analyse_defects(all_results)
 
 def task3_1():
     REPO_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -654,9 +650,19 @@ def plot_task3(csv_path: str, out_path: str = "top10_bar.png"):
 
 
 if __name__ == "__main__":
+    print("Running Task 1...")
     task1()
-    all_results, hotspots, defect_results = run_task2_complexity_pipeline()
+    print("Finished Task 1.")
+    print("\nRunning Task 2...")
+    all_results = task2_2()
+    hotspots = task2_3(all_results)
+    correlation = task2_4(all_results)
+    defect_results = task2_5(all_results)
+    print("Finished Task 2.")
+    print("\nRunning Task 3...")
     task3_1()
     task3_2()
     task3_4_1("src/transformers/generation/utils.py")
     task3_4_2("transformers/src/transformers/generation/utils.py")
+    print("Finished Task 3.")
+    print("Finished all tasks successfully.")

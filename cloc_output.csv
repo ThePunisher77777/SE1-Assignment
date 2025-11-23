@@ -1,4 +1,4 @@
-language,filename,blank,comment,code,"github.com/AlDanial/cloc v 2.06  T=10.64 s (444.2 files/s 177845.5 lines/s)"
+language,filename,blank,comment,code,"github.com/AlDanial/cloc v 2.06  T=10.38 s (455.3 files/s 182303.9 lines/s)"
 JSON,/Users/danielmaksimovic/Desktop/fss-assignment/SE1-Assignment/transformers/tests/utils/tiny_model_summary.json,0,0,7246
 Python,/Users/danielmaksimovic/Desktop/fss-assignment/SE1-Assignment/transformers/tests/trainer/test_trainer.py,928,548,4974
 Python,/Users/danielmaksimovic/Desktop/fss-assignment/SE1-Assignment/transformers/src/transformers/trainer.py,752,965,4006
