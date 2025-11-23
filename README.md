@@ -1,4 +1,7 @@
 # Fundamentals of Software Systems - Software Evolution - Part 1 Assignment
+Daniel Maksimovic
+Cedric Egon von Rauscher
+Mika Schoch
 
 # Task 1: Defect Analysis
 ## Question: Calculate and plot the total number of defects per month. Why do you think the number of defects dropped sharply in October 2025?
