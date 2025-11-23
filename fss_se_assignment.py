@@ -18,6 +18,10 @@ pattern = re.compile(r"\b(bug|fix|error|issue)\b", re.IGNORECASE)
 def task1():
     defects_per_month, defective_commits = defects_month_commits()
     occurences_of_files = occ_of_files(defective_commits)
+    with open("occurences_of_files.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, occurences_of_files.keys())
+        w.writeheader()
+        w.writerow(occurences_of_files)
     two_most_occuring_files = create_two_most_occuring(occurences_of_files)
     defect_per_month_of_two_most = defect_per_month_of_two_most_occ(defective_commits, two_most_occuring_files)
     plot_task_1(defects_per_month=defects_per_month, defects_per_month_two_most_occuring=defect_per_month_of_two_most)
