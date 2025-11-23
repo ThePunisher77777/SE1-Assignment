@@ -5,7 +5,6 @@ import csv
 import matplotlib.pyplot as plot
 from radon.complexity import cc_visit
 import pydriller as pyd
-import datetime
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import re
@@ -42,7 +41,7 @@ def defects_month_commits():
     # search commits for regex pattern
     defects_per_month = defaultdict(int)
     defective_commits = list()
-    for commit in pyd.Repository('./transformers', since=datetime.datetime(2023, 1, 1)).traverse_commits():
+    for commit in pyd.Repository('./transformers', since=datetime(2023, 1, 1)).traverse_commits():
         if pattern.search(commit.msg):
             defective_commits.append(commit) 
             year_month = commit.committer_date.strftime("%Y-%m")
