@@ -18,6 +18,7 @@ def task1():
     occurences_of_files = occ_of_files(defective_commits)
     with open("defects_per_file.csv", "w", newline="") as f:
         w = csv.writer(f)
+        w.writerow(["file", "defects"])
         for key, value in occurences_of_files.items():
             w.writerow([key, value])
     two_most_occuring_files = create_two_most_occuring(occurences_of_files)

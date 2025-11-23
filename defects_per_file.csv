@@ -1,3 +1,4 @@
+file,defects
 src/transformers/models/t5/modeling_t5.py,47
 src/transformers/__init__.py,295
 src/transformers/generation/__init__.py,13
